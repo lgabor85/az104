@@ -43,7 +43,8 @@ function printSecret {
     
 }
 
-[string]$projectName = "mslearn" + (Get-Random -Count 1 -Maximum 100)
+[string]$prefix = Read-Host -Prompt "Enter the prefix"
+[string]$resourceGroupName = "${prefix}-Rg"
 [string]$location = Read-Host -Prompt "Enter the location (i.e. westeurope, northeurope, etc.)"
 [string]$upn = Read-Host -Prompt "Enter your user principal name (email address) used to sign in to Azure"
 
@@ -52,13 +53,26 @@ function printSecret {
 [string]$secretName = Read-Host -Prompt "Enter the secret name"
 
 
+$choice = Read-Host -Prompt "Do you want to create resource groupg $resourceGroupNamne or use an existing one? (create/use)"
 
-$resourceGroupName = "${projectName}-rg"
-$keyVaultName = "${projectName}-Kv"
+if ($choice -eq "create") {
+
+    New-AzResourceGroup -Name $resourceGroupName -Location $location
+
+}
+
+else {
+
+    $resourceGroupName = Read-Host -Prompt "Enter the resource group name"
+
+}
+
+
+
+$keyVaultName = "${prefix}-Kv" + (Get-Random -Minimum 1000 -Maximum 9999)
 $adUserId = (Get-AzADUser -UserPrincipalName $upn).Id
 $templateUri = "https://raw.githubusercontent.com/Azure/azure-docs-json-samples/master/tutorials-use-key-vault/CreateKeyVault.json"
 
-New-AzResourceGroup -Name $resourceGroupName -Location $location
 New-AzResourceGroupDeployment -ResourceGroupName $resourceGroupName -TemplateUri $templateUri -keyVaultName $keyVaultName -adUserId $adUserId -secretValue $secretValue -secretName $secretName
 
 Read-Host -Prompt "Press [Enter] to print the secret"
